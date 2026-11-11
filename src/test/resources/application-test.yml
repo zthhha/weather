@@ -10,9 +10,6 @@ spring:
   flyway:
     enabled: false
 app:
-  jwt:
-    secret: test-secret-that-is-long-enough-for-hmac-sha-256
-    expiration: PT8H
   qweather:
     base-url: https://example.test
     api-key: test-key
