@@ -1,5 +1,6 @@
 package com.tlias.weather.airquality;
 
+import com.tlias.weather.alert.AlertEvaluationService;
 import com.tlias.weather.city.City;
 import com.tlias.weather.city.CityRepository;
 import org.junit.jupiter.api.Test;
@@ -21,9 +22,10 @@ class AirQualityCollectionServiceTests {
     private final AirQualityProvider provider = mock(AirQualityProvider.class);
     private final AirQualityObservationRepository observations = mock(AirQualityObservationRepository.class);
     private final CollectionJobLogRepository logs = mock(CollectionJobLogRepository.class);
+    private final AlertEvaluationService alertEvaluationService = mock(AlertEvaluationService.class);
     private final Instant now = Instant.parse("2026-11-11T00:00:00Z");
     private final AirQualityCollectionService service = new AirQualityCollectionService(cities, provider, observations, logs,
-            Clock.fixed(now, ZoneOffset.UTC));
+            alertEvaluationService, Clock.fixed(now, ZoneOffset.UTC));
 
     @Test
     void recordsPartialSuccessAndContinuesAfterCityFailure() {
@@ -36,6 +38,7 @@ class AirQualityCollectionServiceTests {
         when(provider.fetchCurrent(failingCity)).thenThrow(new AirQualityProviderException("temporary outage"));
         when(observations.findByCityAndObservedAtAndSource(successfulCity, reading.observedAt(), reading.source()))
                 .thenReturn(Optional.empty());
+        when(observations.save(any(AirQualityObservation.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         CollectionJobLog result = service.collectAllEnabledCities();
 
@@ -43,6 +46,7 @@ class AirQualityCollectionServiceTests {
         assertThat(result.getSuccessfulCities()).isEqualTo(1);
         assertThat(result.getFailedCities()).isEqualTo(1);
         verify(observations).save(any(AirQualityObservation.class));
+        verify(alertEvaluationService).evaluateNewObservation(any(AirQualityObservation.class));
     }
 
     @Test
@@ -59,6 +63,7 @@ class AirQualityCollectionServiceTests {
 
         assertThat(result.getStatus()).isEqualTo("SUCCESS");
         verify(observations, never()).save(any());
+        verifyNoInteractions(alertEvaluationService);
     }
 
     private AirQualityReading reading() {

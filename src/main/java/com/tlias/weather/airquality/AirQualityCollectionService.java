@@ -1,5 +1,6 @@
 package com.tlias.weather.airquality;
 
+import com.tlias.weather.alert.AlertEvaluationService;
 import com.tlias.weather.city.City;
 import com.tlias.weather.city.CityRepository;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,20 +17,24 @@ public class AirQualityCollectionService {
     private final AirQualityProvider provider;
     private final AirQualityObservationRepository observations;
     private final CollectionJobLogRepository jobLogs;
+    private final AlertEvaluationService alertEvaluationService;
     private final Clock clock;
 
     @org.springframework.beans.factory.annotation.Autowired
     public AirQualityCollectionService(CityRepository cities, AirQualityProvider provider,
-                                       AirQualityObservationRepository observations, CollectionJobLogRepository jobLogs) {
-        this(cities, provider, observations, jobLogs, Clock.systemUTC());
+                                       AirQualityObservationRepository observations, CollectionJobLogRepository jobLogs,
+                                       AlertEvaluationService alertEvaluationService) {
+        this(cities, provider, observations, jobLogs, alertEvaluationService, Clock.systemUTC());
     }
 
     AirQualityCollectionService(CityRepository cities, AirQualityProvider provider,
-                                AirQualityObservationRepository observations, CollectionJobLogRepository jobLogs, Clock clock) {
+                                AirQualityObservationRepository observations, CollectionJobLogRepository jobLogs,
+                                AlertEvaluationService alertEvaluationService, Clock clock) {
         this.cities = cities;
         this.provider = provider;
         this.observations = observations;
         this.jobLogs = jobLogs;
+        this.alertEvaluationService = alertEvaluationService;
         this.clock = clock;
     }
 
@@ -63,6 +68,10 @@ public class AirQualityCollectionService {
 
     private void persistIfNew(City city, AirQualityReading reading, Instant collectedAt) {
         observations.findByCityAndObservedAtAndSource(city, reading.observedAt(), reading.source())
-                .orElseGet(() -> observations.save(new AirQualityObservation(city, reading, collectedAt)));
+                .orElseGet(() -> {
+                    AirQualityObservation observation = observations.save(new AirQualityObservation(city, reading, collectedAt));
+                    alertEvaluationService.evaluateNewObservation(observation);
+                    return observation;
+                });
     }
 }
