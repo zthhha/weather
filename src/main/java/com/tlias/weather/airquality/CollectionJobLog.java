@@ -31,8 +31,11 @@ public class CollectionJobLog {
         this.status = failures == 0 ? "SUCCESS" : (successes == 0 ? "FAILED" : "PARTIAL_SUCCESS");
     }
     public Long getId() { return id; }
+    public Instant getStartedAt() { return startedAt; }
+    public Instant getFinishedAt() { return finishedAt; }
     public String getStatus() { return status; }
     public int getTotalCities() { return totalCities; }
     public int getSuccessfulCities() { return successfulCities; }
     public int getFailedCities() { return failedCities; }
+    public String getErrorSummary() { return errorSummary; }
 }
