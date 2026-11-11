@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:weather;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+app:
+  jwt:
+    secret: test-secret-that-is-long-enough-for-hmac-sha-256
+    expiration: PT8H
+  qweather:
+    base-url: https://example.test
+    api-key: test-key
+    connect-timeout: PT5S
+    read-timeout: PT10S
+  collection:
+    enabled: false
+    fixed-delay: PT5M
