@@ -11,9 +11,13 @@ import java.time.Duration;
 @Validated
 @ConfigurationProperties(prefix = "app")
 public record AppProperties(
+        @Valid @NotNull Jwt jwt,
         @Valid @NotNull QWeather qweather,
         @Valid @NotNull Collection collection
 ) {
+    public record Jwt(@NotBlank String secret, @NotNull Duration expiration) {
+    }
+
     public record QWeather(
             @NotBlank String baseUrl,
             @NotBlank String geoBaseUrl,

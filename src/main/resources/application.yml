@@ -25,6 +25,9 @@ management:
         include: health,info
 
 app:
+  jwt:
+    secret: ${JWT_SECRET:weather-dashboard-development-jwt-secret-must-be-at-least-32-bytes}
+    expiration: PT24H
   qweather:
     base-url: ${QWEATHER_BASE_URL:https://devapi.qweather.com}
     geo-base-url: ${QWEATHER_GEO_BASE_URL:https://devapi.qweather.com}
