@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { Refresh } from '@element-plus/icons-vue'
 import VChart from 'vue-echarts'
 import { useCityStore } from '@/stores/city'
+import { useAuthStore } from '@/stores/auth'
 import { airQualityApi } from '@/api/airQuality'
 import { alertsApi } from '@/api/alerts'
 import { collectionsApi } from '@/api/collections'
@@ -10,6 +11,7 @@ import { historyRange } from '@/utils/dateRange'
 import type { AlertEvent, CollectionJobLog, Forecast, Observation } from '@/types/api'
 
 const cityStore = useCityStore()
+const auth = useAuthStore()
 const latest = ref<Observation | null>(null)
 const history = ref<Observation[]>([])
 const forecasts = ref<Forecast[]>([])
@@ -55,7 +57,8 @@ async function loadDashboard() {
   const range = historyRange(hours.value)
   const results = await Promise.allSettled([
     airQualityApi.latest(cityId), airQualityApi.history(cityId, range.from, range.to),
-    airQualityApi.forecasts(cityId), alertsApi.events({ cityId, status: 'ACTIVE' }), collectionsApi.list(),
+    airQualityApi.forecasts(cityId), alertsApi.events({ cityId, status: 'ACTIVE' }),
+    ...(auth.isAdmin ? [collectionsApi.list()] : []),
   ])
   if (currentRequest !== requestId) return
   const [latestResult, historyResult, forecastResult, alertsResult, jobsResult] = results
@@ -63,7 +66,7 @@ async function loadDashboard() {
   history.value = historyResult.status === 'fulfilled' ? historyResult.value : []
   forecasts.value = forecastResult.status === 'fulfilled' ? forecastResult.value : []
   alerts.value = alertsResult.status === 'fulfilled' ? alertsResult.value : []
-  lastJob.value = jobsResult.status === 'fulfilled' ? jobsResult.value[0] ?? null : null
+  lastJob.value = jobsResult?.status === 'fulfilled' ? jobsResult.value[0] ?? null : null
   if (latestResult.status === 'rejected' && (latestResult.reason as { status?: number }).status !== 404) error.value = latestResult.reason?.message ?? '无法加载看板数据'
   loading.value = false
 }
@@ -92,7 +95,7 @@ onBeforeUnmount(() => window.clearInterval(timer))
           <article class="job-card"><p>最近采集</p><h3>{{ lastJob?.status ?? '暂无任务' }}</h3><span v-if="lastJob">成功 {{ lastJob.successfulCities }} / {{ lastJob.totalCities }} 个城市</span><span v-else>等待首次采集</span></article>
         </div>
         <div class="pollutant-grid"><article v-for="card in pollutantCards" :key="card[0]" class="metric-card"><span>{{ card[0] }}</span><strong>{{ card[1] ?? '—' }}</strong><small>{{ card[2] }}</small></article></div>
-        <div class="chart-grid"><el-card shadow="never"><template #header><div class="card-title">AQI 历史趋势 <small>最多 7 天</small></div></template><v-chart v-if="history.length" class="chart" :option="historyOption" autoresize /><el-empty v-else description="此时间段没有历史数据" /></el-card><el-card shadow="never"><template #header><div class="card-title">未来 24 小时预测 <el-button size="small" :loading="generating" @click="regenerate">重新生成</el-button></div></template><v-chart v-if="forecasts.length" class="chart" :option="forecastOption" autoresize /><el-empty v-else description="预测尚未生成" /></el-card></div>
+        <div class="chart-grid"><el-card shadow="never"><template #header><div class="card-title">AQI 历史趋势 <small>最多 7 天</small></div></template><v-chart v-if="history.length" class="chart" :option="historyOption" autoresize /><el-empty v-else description="此时间段没有历史数据" /></el-card><el-card shadow="never"><template #header><div class="card-title">未来 24 小时预测 <el-button v-if="auth.isAdmin" size="small" :loading="generating" @click="regenerate">重新生成</el-button></div></template><v-chart v-if="forecasts.length" class="chart" :option="forecastOption" autoresize /><el-empty v-else description="预测尚未生成" /></el-card></div>
         <el-card shadow="never" class="alerts-card"><template #header><div class="card-title">当前活动预警 <el-tag :type="alerts.length ? 'danger' : 'success'">{{ alerts.length }} 条</el-tag></div></template><el-empty v-if="!alerts.length" description="当前没有活动预警" /><el-table v-else :data="alerts"><el-table-column prop="severity" label="等级" width="100"><template #default="scope"><el-tag type="danger">{{ scope.row.severity }}</el-tag></template></el-table-column><el-table-column prop="ruleName" label="规则" /><el-table-column prop="triggeredValue" label="触发值" width="100" /><el-table-column prop="lastTriggeredAt" label="最近触发"><template #default="scope">{{ formatFullTime(scope.row.lastTriggeredAt) }}</template></el-table-column></el-table></el-card>
       </template>
     </template>
