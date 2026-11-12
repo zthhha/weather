@@ -53,7 +53,7 @@ INSERT INTO roles (code, name) VALUES
     ('ROLE_USER', 'User');
 
 INSERT INTO users (username, password_hash, enabled)
-SELECT 'admin', '$2a$10$WQ2QxZdwFYOJZCZiW41L5eKjWJXg4f2gZyqPiMG2FG.zJlWwepN2W', TRUE
+SELECT 'admin', '$2a$10$eyUGrmrBg5YAX7Vg29oFw.et9SATZmslgCK48J8FdGUfSqgLq0UT2', TRUE
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin');
 
 INSERT INTO user_roles (user_id, role_id)
