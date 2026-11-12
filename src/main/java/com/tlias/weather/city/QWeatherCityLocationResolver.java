@@ -27,7 +27,7 @@ public class QWeatherCityLocationResolver implements CityLocationResolver {
         }
         try {
             String body = client.get()
-                    .uri(uriBuilder -> uriBuilder.path("/geo/v2/city/lookup")
+                    .uri(uriBuilder -> uriBuilder.path("/v2/city/lookup")
                             .queryParam("location", cityName)
                             .queryParam("key", properties.qweather().apiKey())
                             .build())
