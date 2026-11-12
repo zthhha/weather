@@ -21,7 +21,9 @@ export async function request<T>(promise: Promise<{ data: ApiEnvelope<T> }>): Pr
   } catch (error) {
     const axiosError = error as AxiosError<{ message?: string }>
     const status = axiosError.response?.status
-    const message = axiosError.response?.data?.message
+    const body = axiosError.response?.data as { message?: string; data?: { message?: string } } | undefined
+    const message = body?.data?.message
+      ?? body?.message
       ?? (status === 404 ? '暂无可用数据' : undefined)
       ?? axiosError.message
       ?? '请求失败，请稍后重试'

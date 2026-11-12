@@ -15,7 +15,7 @@ public class QWeatherCityLocationResolver implements CityLocationResolver {
     private final ObjectMapper objectMapper;
 
     public QWeatherCityLocationResolver(RestClient.Builder builder, AppProperties properties, ObjectMapper objectMapper) {
-        this.client = builder.baseUrl(properties.qweather().baseUrl()).build();
+        this.client = builder.baseUrl(properties.qweather().geoBaseUrl()).build();
         this.properties = properties;
         this.objectMapper = objectMapper;
     }
