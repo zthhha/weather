@@ -27,15 +27,16 @@ public class QWeatherAirQualityProvider implements AirQualityProvider {
 
     @Override
     public AirQualityReading fetchCurrent(City city) {
-        if (properties.qweather().apiKey() == null || properties.qweather().apiKey().isBlank()) {
-            throw new AirQualityProviderException("QWeather API key is not configured");
+        if (properties.qweather().jwtToken() == null || properties.qweather().jwtToken().isBlank()) {
+            throw new AirQualityProviderException("QWeather JWT token is not configured");
+        }
+        if (city.getLatitude() == null || city.getLongitude() == null) {
+            throw new AirQualityProviderException("City coordinates are not configured: " + city.getName());
         }
         try {
             String body = client.get()
-                    .uri(uriBuilder -> uriBuilder.path("/v7/air/now")
-                            .queryParam("location", city.getLocationId())
-                            .queryParam("key", properties.qweather().apiKey())
-                            .build())
+                    .uri("/airquality/v1/current/{latitude}/{longitude}", city.getLatitude(), city.getLongitude())
+                    .header("Authorization", "Bearer " + properties.qweather().jwtToken())
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (request, response) -> {
                         throw new AirQualityProviderException("QWeather returned HTTP " + response.getStatusCode().value());
@@ -54,21 +55,31 @@ public class QWeatherAirQualityProvider implements AirQualityProvider {
     private AirQualityReading parse(String body) {
         try {
             JsonNode root = objectMapper.readTree(body);
-            if (!"200".equals(root.path("code").asText())) {
-                throw new AirQualityProviderException("QWeather returned business code " + root.path("code").asText());
+            JsonNode indexes = root.path("indexes");
+            if (!indexes.isArray() || indexes.isEmpty()) {
+                throw new AirQualityProviderException("QWeather response did not contain air quality indexes");
             }
-            JsonNode now = root.path("now");
-            if (now.isMissingNode()) {
-                throw new AirQualityProviderException("QWeather response did not contain current air quality");
-            }
+            JsonNode index = indexes.get(0);
+            JsonNode pollutants = root.path("pollutants");
             return new AirQualityReading(
-                    Instant.now(), SOURCE, integer(now, "aqi"), decimal(now, "pm2p5"), decimal(now, "pm10"),
-                    decimal(now, "so2"), decimal(now, "no2"), decimal(now, "co"), decimal(now, "o3"));
+                    Instant.now(), SOURCE, index.path("aqi").asInt(), pollutant(pollutants, "pm2p5"), pollutant(pollutants, "pm10"),
+                    pollutant(pollutants, "so2"), pollutant(pollutants, "no2"), pollutant(pollutants, "co"), pollutant(pollutants, "o3"));
         } catch (AirQualityProviderException exception) {
             throw exception;
         } catch (Exception exception) {
             throw new AirQualityProviderException("Invalid QWeather response", exception);
         }
+    }
+
+    private BigDecimal pollutant(JsonNode pollutants, String code) {
+        if (!pollutants.isArray()) return null;
+        for (JsonNode pollutant : pollutants) {
+            if (code.equals(pollutant.path("code").asText())) {
+                String value = pollutant.path("concentration").path("value").asText();
+                if (!value.isBlank()) return new BigDecimal(value);
+            }
+        }
+        return null;
     }
 
     private int integer(JsonNode node, String field) {

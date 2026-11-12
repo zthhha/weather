@@ -21,7 +21,7 @@ public record AppProperties(
     public record QWeather(
             @NotBlank String baseUrl,
             @NotBlank String geoBaseUrl,
-            String apiKey,
+            String jwtToken,
             @NotNull Duration connectTimeout,
             @NotNull Duration readTimeout
     ) {

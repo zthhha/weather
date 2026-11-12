@@ -22,15 +22,15 @@ public class QWeatherCityLocationResolver implements CityLocationResolver {
 
     @Override
     public ResolvedCity resolve(String cityName) {
-        if (properties.qweather().apiKey() == null || properties.qweather().apiKey().isBlank()) {
-            throw new AirQualityProviderException("QWeather API key is not configured");
+        if (properties.qweather().jwtToken() == null || properties.qweather().jwtToken().isBlank()) {
+            throw new AirQualityProviderException("QWeather JWT token is not configured");
         }
         try {
             String body = client.get()
                     .uri(uriBuilder -> uriBuilder.path("/geo/v2/city/lookup")
                             .queryParam("location", cityName)
-                            .queryParam("key", properties.qweather().apiKey())
                             .build())
+                    .header("Authorization", "Bearer " + properties.qweather().jwtToken())
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (request, response) -> {
                         throw new AirQualityProviderException("QWeather city lookup returned HTTP " + response.getStatusCode().value());
@@ -47,7 +47,9 @@ public class QWeatherCityLocationResolver implements CityLocationResolver {
             JsonNode first = location.get(0);
             String id = required(first, "id");
             String timezone = first.path("tz").asText("Asia/Shanghai");
-            return new ResolvedCity(id, timezone);
+            java.math.BigDecimal latitude = new java.math.BigDecimal(required(first, "lat"));
+            java.math.BigDecimal longitude = new java.math.BigDecimal(required(first, "lon"));
+            return new ResolvedCity(id, timezone, latitude, longitude);
         } catch (AirQualityProviderException exception) {
             throw exception;
         } catch (Exception exception) {

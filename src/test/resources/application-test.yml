@@ -16,7 +16,7 @@ app:
   qweather:
     base-url: https://example.test
     geo-base-url: https://example.test
-    api-key: test-key
+    jwt-token: test-qweather-jwt-token
     connect-timeout: PT5S
     read-timeout: PT10S
   collection:

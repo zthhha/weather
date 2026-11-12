@@ -54,7 +54,7 @@ class CityControllerTests {
         CityLocationResolver testCityLocationResolver() {
             return name -> {
                 if ("Unknown City".equals(name)) throw new AirQualityProviderException("City not found in QWeather: " + name);
-                return new ResolvedCity("101310101", "Asia/Shanghai");
+                return new ResolvedCity("101310101", "Asia/Shanghai", new java.math.BigDecimal("20.04"), new java.math.BigDecimal("110.20"));
             };
         }
     }

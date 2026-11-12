@@ -32,7 +32,7 @@ public class CityController {
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<CityResponse> create(@Valid @RequestBody CityRequest request) {
         ResolvedCity resolved = cityLocationResolver.resolve(request.name());
-        City city = cities.save(new City(request.name(), resolved.locationId(), resolved.timezone(), request.enabled()));
+        City city = cities.save(new City(request.name(), resolved.locationId(), resolved.timezone(), request.enabled(), resolved.latitude(), resolved.longitude()));
         return ApiResponse.of(CityResponse.from(city));
     }
 
@@ -40,7 +40,7 @@ public class CityController {
     public ApiResponse<CityResponse> update(@PathVariable Long id, @Valid @RequestBody CityRequest request) {
         City city = cities.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "City not found"));
         ResolvedCity resolved = cityLocationResolver.resolve(request.name());
-        city.update(request.name(), resolved.locationId(), resolved.timezone(), request.enabled());
+        city.update(request.name(), resolved.locationId(), resolved.timezone(), request.enabled(), resolved.latitude(), resolved.longitude());
         return ApiResponse.of(CityResponse.from(cities.save(city)));
     }
 }

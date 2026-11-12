@@ -1,0 +1,3 @@
+ALTER TABLE cities
+    ADD COLUMN latitude DECIMAL(6,2) NULL,
+    ADD COLUMN longitude DECIMAL(6,2) NULL;

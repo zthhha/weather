@@ -41,7 +41,7 @@ public class CitySearchController {
         if (!local.isEmpty()) return ApiResponse.of(local.stream().map(CityResponse::from).toList());
         ResolvedCity resolved = resolver.resolve(keyword.trim());
         City city = cities.findByName(keyword.trim())
-                .orElseGet(() -> cities.save(new City(keyword.trim(), resolved.locationId(), resolved.timezone(), false)));
+                .orElseGet(() -> cities.save(new City(keyword.trim(), resolved.locationId(), resolved.timezone(), false, resolved.latitude(), resolved.longitude())));
         return ApiResponse.of(List.of(CityResponse.from(city)));
     }
 
