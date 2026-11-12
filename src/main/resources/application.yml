@@ -27,7 +27,7 @@ management:
 app:
   qweather:
     base-url: ${QWEATHER_BASE_URL:https://devapi.qweather.com}
-    geo-base-url: ${QWEATHER_GEO_BASE_URL:https://geoapi.qweather.com}
+    geo-base-url: ${QWEATHER_GEO_BASE_URL:https://devapi.qweather.com}
     api-key: ${QWEATHER_API_KEY:4f9d235ca8ef4564b5f693d49acff3b8}
     connect-timeout: PT5S
     read-timeout: PT10S
