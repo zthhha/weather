@@ -3,6 +3,7 @@ package com.tlias.weather.alert;
 import com.tlias.weather.airquality.AirQualityObservation;
 import com.tlias.weather.airquality.AirQualityReading;
 import com.tlias.weather.city.City;
+import com.tlias.weather.notification.NotificationService;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -18,8 +19,9 @@ import static org.mockito.Mockito.*;
 class AlertEvaluationServiceTests {
     private final AlertRuleRepository rules = mock(AlertRuleRepository.class);
     private final AlertEventRepository events = mock(AlertEventRepository.class);
+    private final NotificationService notifications = mock(NotificationService.class);
     private final Instant now = Instant.parse("2026-11-11T00:00:00Z");
-    private final AlertEvaluationService service = new AlertEvaluationService(rules, events, Clock.fixed(now, ZoneOffset.UTC));
+    private final AlertEvaluationService service = new AlertEvaluationService(rules, events, notifications, Clock.fixed(now, ZoneOffset.UTC));
 
     @Test
     void createsActiveEventWhenRuleFirstMatches() {

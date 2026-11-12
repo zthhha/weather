@@ -18,6 +18,7 @@ public class UserSubscription {
         this.user = user; this.city = city; this.minimumSeverity = minimumSeverity; this.enabled = enabled;
     }
     public Long getId() { return id; }
+    public User getUser() { return user; }
     public City getCity() { return city; }
     public String getMinimumSeverity() { return minimumSeverity; }
     public boolean isEnabled() { return enabled; }
