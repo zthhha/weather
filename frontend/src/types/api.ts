@@ -13,8 +13,6 @@ export interface City {
 
 export interface CityRequest {
   name: string
-  locationId: string
-  timezone: string
   enabled: boolean
 }
 
