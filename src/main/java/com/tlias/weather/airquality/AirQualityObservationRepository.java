@@ -11,4 +11,5 @@ public interface AirQualityObservationRepository extends JpaRepository<AirQualit
     Optional<AirQualityObservation> findByCityAndObservedAtAndSource(City city, Instant observedAt, String source);
     Optional<AirQualityObservation> findFirstByCityIdOrderByObservedAtDesc(Long cityId);
     List<AirQualityObservation> findByCityIdAndObservedAtBetweenOrderByObservedAtAsc(Long cityId, Instant from, Instant to);
+    List<AirQualityObservation> findByCityEnabledTrueOrderByObservedAtDesc();
 }

@@ -51,6 +51,23 @@ public class AirQualityController {
         return ApiResponse.of(results);
     }
 
+    @GetMapping("/rankings")
+    public ApiResponse<List<CityRankingResponse>> rankings(@RequestParam(defaultValue = "10") int limit) {
+        if (limit < 1 || limit > 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "limit must be between 1 and 100");
+        }
+        var latestByCity = new java.util.LinkedHashMap<Long, AirQualityObservation>();
+        for (AirQualityObservation observation : observations.findByCityEnabledTrueOrderByObservedAtDesc()) {
+            latestByCity.putIfAbsent(observation.getCity().getId(), observation);
+        }
+        List<CityRankingResponse> result = latestByCity.values().stream()
+                .sorted(java.util.Comparator.comparingInt(AirQualityObservation::getAqi).reversed())
+                .limit(limit)
+                .map(CityRankingResponse::from)
+                .toList();
+        return ApiResponse.of(result);
+    }
+
     private void requireCity(Long cityId) {
         if (!cities.existsById(cityId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "City not found");

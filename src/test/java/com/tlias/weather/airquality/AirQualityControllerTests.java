@@ -70,6 +70,27 @@ class AirQualityControllerTests {
     }
 
     @Test
+    void ranksCitiesByLatestAqi() throws Exception {
+        City beijing = cities.save(new City("Beijing", "101010100", "Asia/Shanghai", true));
+        City haikou = cities.save(new City("Haikou", "101310101", "Asia/Shanghai", true));
+        Instant observedAt = Instant.parse("2026-11-11T00:00:00Z");
+        observations.save(new AirQualityObservation(beijing, new AirQualityReading(observedAt, "TEST", 80, null, null, null, null, null, null), observedAt));
+        observations.save(new AirQualityObservation(haikou, new AirQualityReading(observedAt, "TEST", 120, null, null, null, null, null, null), observedAt));
+
+        mockMvc.perform(get("/api/v1/air-quality/rankings").param("limit", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[0].cityName").value("Haikou"))
+                .andExpect(jsonPath("$.data[0].aqi").value(120));
+    }
+
+    @Test
+    void rejectsInvalidRankingLimit() throws Exception {
+        mockMvc.perform(get("/api/v1/air-quality/rankings").param("limit", "0"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void rejectsRangeLargerThanSevenDays() throws Exception {
         City city = cities.save(new City("Chengdu", "101270100", "Asia/Shanghai", true));
 
