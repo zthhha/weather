@@ -1,6 +1,8 @@
 import axios, { AxiosError } from 'axios'
 import type { ApiEnvelope } from '@/types/api'
 
+const TOKEN_KEY = 'weather.access-token'
+
 export class ApiError extends Error {
   readonly status: number | undefined
 
@@ -13,6 +15,12 @@ export class ApiError extends Error {
 const client = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? '',
   timeout: 15_000,
+})
+
+client.interceptors.request.use((config) => {
+  const token = sessionStorage.getItem(TOKEN_KEY)
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
 })
 
 export async function request<T>(promise: Promise<{ data: ApiEnvelope<T> }>): Promise<T> {
