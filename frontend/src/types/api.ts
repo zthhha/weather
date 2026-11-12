@@ -86,6 +86,14 @@ export interface AlertRuleRequest {
   enabled: boolean
 }
 
+export interface Subscription {
+  id: number
+  cityId: number
+  cityName: string
+  minimumSeverity: string
+  enabled: boolean
+}
+
 export interface AlertEvent {
   id: number
   ruleId: number
