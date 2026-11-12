@@ -5,6 +5,8 @@ import CollectionsView from '@/views/CollectionsView.vue'
 import AlertRulesView from '@/views/AlertRulesView.vue'
 import AlertEventsView from '@/views/AlertEventsView.vue'
 import SubscriptionsView from '@/views/SubscriptionsView.vue'
+import NotificationsView from '@/views/NotificationsView.vue'
+import RankingsView from '@/views/RankingsView.vue'
 import AuthView from '@/views/AuthView.vue'
 import { useAuthStore } from '@/stores/auth'
 
@@ -14,7 +16,9 @@ export const router = createRouter({
     { path: '/login', component: AuthView, props: { register: false }, meta: { public: true, title: '登录' } },
     { path: '/register', component: AuthView, props: { register: true }, meta: { public: true, title: '注册' } },
     { path: '/', component: DashboardView, meta: { title: '空气质量看板' } },
+    { path: '/rankings', component: RankingsView, meta: { title: '城市排行' } },
     { path: '/subscriptions', component: SubscriptionsView, meta: { title: '城市订阅' } },
+    { path: '/notifications', component: NotificationsView, meta: { title: '我的预警' } },
     { path: '/alert-events', component: AlertEventsView, meta: { title: '预警事件' } },
     { path: '/cities', component: CitiesView, meta: { title: '城市管理', admin: true } },
     { path: '/collections', component: CollectionsView, meta: { title: '采集管理', admin: true } },

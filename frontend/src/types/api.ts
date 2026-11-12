@@ -94,6 +94,26 @@ export interface Subscription {
   enabled: boolean
 }
 
+export interface CityRanking {
+  cityId: number
+  cityName: string
+  aqi: number
+  aqiLevel: string
+  aqiColor: string
+  observedAt: string
+}
+
+export interface Notification {
+  id: number
+  alertEventId: number
+  ruleName: string
+  cityName: string
+  severity: string
+  lastTriggeredAt: string
+  readAt: string | null
+  createdAt: string
+}
+
 export interface AlertEvent {
   id: number
   ruleId: number

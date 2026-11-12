@@ -25,9 +25,10 @@ function logout() { auth.logout(); router.replace('/login') }
       <div class="brand"><span class="brand-mark">AQ</span><div><strong>清风预警</strong><small>Air Quality Monitor</small></div></div>
       <el-menu router :default-active="route.path" class="nav" background-color="transparent" text-color="#b9c7de" active-text-color="#ffffff">
         <el-menu-item index="/"><el-icon><DataAnalysis /></el-icon><span>概览看板</span></el-menu-item>
+        <el-menu-item index="/rankings"><el-icon><Trophy /></el-icon><span>城市排行</span></el-menu-item>
         <el-menu-item index="/subscriptions"><el-icon><Location /></el-icon><span>城市订阅</span></el-menu-item>
-        <el-menu-item index="/alert-events"><el-icon><Bell /></el-icon><span>我的预警</span></el-menu-item>
-        <template v-if="auth.isAdmin"><el-menu-item index="/cities"><el-icon><Location /></el-icon><span>城市管理</span></el-menu-item><el-menu-item index="/collections"><el-icon><Refresh /></el-icon><span>采集管理</span></el-menu-item><el-menu-item index="/alert-rules"><el-icon><Setting /></el-icon><span>预警规则</span></el-menu-item></template>
+        <el-menu-item index="/notifications"><el-icon><Bell /></el-icon><span>我的预警</span></el-menu-item>
+        <template v-if="auth.isAdmin"><el-menu-item index="/cities"><el-icon><Location /></el-icon><span>城市管理</span></el-menu-item><el-menu-item index="/collections"><el-icon><Refresh /></el-icon><span>采集管理</span></el-menu-item><el-menu-item index="/alert-rules"><el-icon><Setting /></el-icon><span>预警规则</span></el-menu-item><el-menu-item index="/alert-events"><el-icon><Warning /></el-icon><span>预警事件</span></el-menu-item></template>
       </el-menu>
       <div class="sidebar-footer">{{ auth.user?.username }} · {{ auth.isAdmin ? '管理员' : '普通用户' }}</div>
     </el-aside>
