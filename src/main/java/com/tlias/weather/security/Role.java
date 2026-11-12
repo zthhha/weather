@@ -10,5 +10,9 @@ public class Role {
     @Column(nullable = false, unique = true) private String code;
     @Column(nullable = false) private String name;
     protected Role() { }
+    public Role(String code, String name) {
+        this.code = code;
+        this.name = name;
+    }
     public String getCode() { return code; }
 }
