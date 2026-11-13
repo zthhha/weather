@@ -5,6 +5,7 @@ import com.tlias.weather.config.AppProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
@@ -16,27 +17,24 @@ import java.time.Instant;
 public class QWeatherAirQualityProvider implements AirQualityProvider {
     private static final String SOURCE = "QWEATHER";
     private final RestClient client;
-    private final AppProperties properties;
     private final ObjectMapper objectMapper;
 
-    public QWeatherAirQualityProvider(RestClient.Builder builder, AppProperties properties, ObjectMapper objectMapper) {
-        this.client = builder.baseUrl(properties.qweather().baseUrl()).build();
-        this.properties = properties;
+    public QWeatherAirQualityProvider(RestClient.Builder builder, AppProperties properties, ObjectMapper objectMapper,
+                                      ClientHttpRequestInterceptor qWeatherAuthorizationInterceptor) {
+        this.client = builder.baseUrl(properties.qweather().baseUrl())
+                .requestInterceptor(qWeatherAuthorizationInterceptor)
+                .build();
         this.objectMapper = objectMapper;
     }
 
     @Override
     public AirQualityReading fetchCurrent(City city) {
-        if (properties.qweather().jwtToken() == null || properties.qweather().jwtToken().isBlank()) {
-            throw new AirQualityProviderException("QWeather JWT token is not configured");
-        }
         if (city.getLatitude() == null || city.getLongitude() == null) {
             throw new AirQualityProviderException("City coordinates are not configured: " + city.getName());
         }
         try {
             String body = client.get()
                     .uri("/airquality/v1/current/{latitude}/{longitude}", city.getLatitude(), city.getLongitude())
-                    .header("Authorization", "Bearer " + properties.qweather().jwtToken())
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (request, response) -> {
                         throw new AirQualityProviderException("QWeather returned HTTP " + response.getStatusCode().value());

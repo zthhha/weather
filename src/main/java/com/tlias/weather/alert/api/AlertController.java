@@ -33,6 +33,12 @@ public class AlertController {
         return ApiResponse.of(AlertRuleResponse.from(ruleService.create(request)));
     }
 
+    @org.springframework.web.bind.annotation.PutMapping("/alert-rules/{id}")
+    public ApiResponse<AlertRuleResponse> updateRule(@org.springframework.web.bind.annotation.PathVariable Long id,
+                                                      @Valid @org.springframework.web.bind.annotation.RequestBody AlertRuleRequest request) {
+        return ApiResponse.of(AlertRuleResponse.from(ruleService.update(id, request)));
+    }
+
     @GetMapping("/alert-rules")
     public ApiResponse<List<AlertRuleResponse>> rules(
             @RequestParam(required = false) Long cityId,

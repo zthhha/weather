@@ -36,6 +36,18 @@ public class AlertRule {
         this.updatedAt = now;
     }
 
+    public void update(String name, City city, AlertMetric metric, AlertOperator operator, BigDecimal threshold,
+                       String severity, boolean enabled, Instant now) {
+        this.name = name;
+        this.city = city;
+        this.metric = metric;
+        this.operator = operator;
+        this.threshold = threshold;
+        this.severity = severity;
+        this.enabled = enabled;
+        this.updatedAt = now;
+    }
+
     public boolean matches(AirQualityObservation observation) {
         if (metric != AlertMetric.AQI) {
             return false;

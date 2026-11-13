@@ -2,7 +2,9 @@ package com.tlias.weather.airquality;
 
 import com.tlias.weather.alert.AlertEvaluationService;
 import com.tlias.weather.city.City;
+import com.tlias.weather.city.CityLocationResolver;
 import com.tlias.weather.city.CityRepository;
+import com.tlias.weather.city.ResolvedCity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +16,7 @@ import java.util.List;
 @Service
 public class AirQualityCollectionService {
     private final CityRepository cities;
+    private final CityLocationResolver cityLocationResolver;
     private final AirQualityProvider provider;
     private final AirQualityObservationRepository observations;
     private final CollectionJobLogRepository jobLogs;
@@ -21,16 +24,17 @@ public class AirQualityCollectionService {
     private final Clock clock;
 
     @org.springframework.beans.factory.annotation.Autowired
-    public AirQualityCollectionService(CityRepository cities, AirQualityProvider provider,
+    public AirQualityCollectionService(CityRepository cities, CityLocationResolver cityLocationResolver, AirQualityProvider provider,
                                        AirQualityObservationRepository observations, CollectionJobLogRepository jobLogs,
                                        AlertEvaluationService alertEvaluationService) {
-        this(cities, provider, observations, jobLogs, alertEvaluationService, Clock.systemUTC());
+        this(cities, cityLocationResolver, provider, observations, jobLogs, alertEvaluationService, Clock.systemUTC());
     }
 
-    AirQualityCollectionService(CityRepository cities, AirQualityProvider provider,
+    AirQualityCollectionService(CityRepository cities, CityLocationResolver cityLocationResolver, AirQualityProvider provider,
                                 AirQualityObservationRepository observations, CollectionJobLogRepository jobLogs,
                                 AlertEvaluationService alertEvaluationService, Clock clock) {
         this.cities = cities;
+        this.cityLocationResolver = cityLocationResolver;
         this.provider = provider;
         this.observations = observations;
         this.jobLogs = jobLogs;
@@ -53,6 +57,7 @@ public class AirQualityCollectionService {
         StringBuilder errors = new StringBuilder();
         for (City city : enabledCities) {
             try {
+                ensureCoordinates(city);
                 AirQualityReading reading = provider.fetchCurrent(city);
                 persistIfNew(city, reading, clock.instant());
                 successes++;
@@ -64,6 +69,13 @@ public class AirQualityCollectionService {
         }
         jobLog.finish(successes, failures, errors.isEmpty() ? null : errors.substring(0, Math.min(errors.length(), 1000)), clock.instant());
         return jobLogs.save(jobLog);
+    }
+
+    private void ensureCoordinates(City city) {
+        if (city.getLatitude() != null && city.getLongitude() != null) return;
+        ResolvedCity resolved = cityLocationResolver.resolve(city.getName());
+        city.update(city.getName(), resolved.locationId(), resolved.timezone(), city.isEnabled(), resolved.latitude(), resolved.longitude());
+        cities.save(city);
     }
 
     private void persistIfNew(City city, AirQualityReading reading, Instant collectedAt) {

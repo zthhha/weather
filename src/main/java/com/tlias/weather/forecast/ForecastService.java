@@ -16,7 +16,6 @@ import java.util.List;
 public class ForecastService {
     public static final String MODEL_VERSION = "linear-trend-v1";
     public static final String READY = "READY";
-    public static final String INSUFFICIENT_DATA = "INSUFFICIENT_DATA";
 
     private final CityRepository cities;
     private final AirQualityObservationRepository observations;
@@ -47,8 +46,9 @@ public class ForecastService {
                 cityId, generatedAt.minus(7, ChronoUnit.DAYS), generatedAt);
         List<ForecastEngine.ForecastPoint> points = engine.forecast(samples, generatedAt);
         forecasts.deleteByCityIdAndModelVersion(cityId, MODEL_VERSION);
+        forecasts.flush();
         if (points.isEmpty()) {
-            return new ForecastGenerationResult(INSUFFICIENT_DATA, 0);
+            return new ForecastGenerationResult(READY, 0);
         }
         List<AqiForecast> generated = points.stream()
                 .map(point -> new AqiForecast(city, point.forecastAt(), generatedAt, point.aqi(), MODEL_VERSION, READY))

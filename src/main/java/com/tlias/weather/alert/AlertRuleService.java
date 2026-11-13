@@ -34,6 +34,15 @@ public class AlertRuleService {
                 request.severity(), request.enabled(), clock.instant()));
     }
 
+    @Transactional
+    public AlertRule update(Long id, AlertRuleRequest request) {
+        AlertRule rule = rules.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Alert rule not found"));
+        rule.update(request.name(), resolveCity(request.cityId()), request.metric(), request.operator(), request.threshold(),
+                request.severity(), request.enabled(), clock.instant());
+        return rules.save(rule);
+    }
+
     private City resolveCity(Long cityId) {
         if (cityId == null) {
             return null;

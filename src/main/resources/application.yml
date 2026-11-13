@@ -31,7 +31,12 @@ app:
   qweather:
     base-url: ${QWEATHER_BASE_URL:https://k3564ut895.re.qweatherapi.com}
     geo-base-url: ${QWEATHER_GEO_BASE_URL:https://k3564ut895.re.qweatherapi.com}
-    jwt-token: ${QWEATHER_JWT_TOKEN:}
+    key-id: ${QWEATHER_KID:KAB6RTEHGH}
+    issuer: ${QWEATHER_ISSUER:Q0591D7395}
+    subject: ${QWEATHER_SUBJECT:25TQ67RV72}
+    private-key: ${QWEATHER_PRIVATE_KEY:MC4CAQAwBQYDK2VwBCIEIE5LvSULHm1/QxBx8dBMe3aFgEvjKkBMwMOw3WWKMrgA}
+    token-validity: ${QWEATHER_TOKEN_VALIDITY:PT24H}
+    refresh-threshold: ${QWEATHER_REFRESH_THRESHOLD:PT1H}
     connect-timeout: PT5S
     read-timeout: PT10S
   collection:

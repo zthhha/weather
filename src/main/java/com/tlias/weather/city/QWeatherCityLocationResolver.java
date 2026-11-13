@@ -5,32 +5,30 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tlias.weather.airquality.AirQualityProviderException;
 import com.tlias.weather.config.AppProperties;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 @Component
 public class QWeatherCityLocationResolver implements CityLocationResolver {
     private final RestClient client;
-    private final AppProperties properties;
     private final ObjectMapper objectMapper;
 
-    public QWeatherCityLocationResolver(RestClient.Builder builder, AppProperties properties, ObjectMapper objectMapper) {
-        this.client = builder.baseUrl(properties.qweather().geoBaseUrl()).build();
-        this.properties = properties;
+    public QWeatherCityLocationResolver(RestClient.Builder builder, AppProperties properties, ObjectMapper objectMapper,
+                                        ClientHttpRequestInterceptor qWeatherAuthorizationInterceptor) {
+        this.client = builder.baseUrl(properties.qweather().geoBaseUrl())
+                .requestInterceptor(qWeatherAuthorizationInterceptor)
+                .build();
         this.objectMapper = objectMapper;
     }
 
     @Override
     public ResolvedCity resolve(String cityName) {
-        if (properties.qweather().jwtToken() == null || properties.qweather().jwtToken().isBlank()) {
-            throw new AirQualityProviderException("QWeather JWT token is not configured");
-        }
         try {
             String body = client.get()
                     .uri(uriBuilder -> uriBuilder.path("/geo/v2/city/lookup")
                             .queryParam("location", cityName)
                             .build())
-                    .header("Authorization", "Bearer " + properties.qweather().jwtToken())
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (request, response) -> {
                         throw new AirQualityProviderException("QWeather city lookup returned HTTP " + response.getStatusCode().value());

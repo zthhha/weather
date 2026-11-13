@@ -3,6 +3,7 @@ package com.tlias.weather.notification.api;
 import com.tlias.weather.common.ApiResponse;
 import com.tlias.weather.notification.AppNotification;
 import com.tlias.weather.notification.AppNotificationRepository;
+import com.tlias.weather.notification.NotificationService;
 import com.tlias.weather.security.User;
 import com.tlias.weather.security.UserRepository;
 import org.springframework.http.HttpStatus;
@@ -18,15 +19,19 @@ import java.util.List;
 public class NotificationController {
     private final UserRepository users;
     private final AppNotificationRepository notifications;
+    private final NotificationService notificationService;
 
-    public NotificationController(UserRepository users, AppNotificationRepository notifications) {
+    public NotificationController(UserRepository users, AppNotificationRepository notifications, NotificationService notificationService) {
         this.users = users;
         this.notifications = notifications;
+        this.notificationService = notificationService;
     }
 
     @GetMapping
     public ApiResponse<List<NotificationResponse>> list(Authentication authentication, @RequestParam(defaultValue = "false") boolean unreadOnly) {
-        List<NotificationResponse> result = notifications.findByUserIdOrderByCreatedAtDesc(currentUser(authentication).getId()).stream()
+        User user = currentUser(authentication);
+        notificationService.reconcileActiveNotifications(user);
+        List<NotificationResponse> result = notifications.findByUserIdOrderByCreatedAtDesc(user.getId()).stream()
                 .filter(notification -> !unreadOnly || notification.getReadAt() == null)
                 .map(NotificationResponse::from).toList();
         return ApiResponse.of(result);
@@ -34,7 +39,9 @@ public class NotificationController {
 
     @GetMapping("/unread-count")
     public ApiResponse<Long> unreadCount(Authentication authentication) {
-        return ApiResponse.of(notifications.countByUserIdAndReadAtIsNull(currentUser(authentication).getId()));
+        User user = currentUser(authentication);
+        notificationService.reconcileActiveNotifications(user);
+        return ApiResponse.of(notifications.countByUserIdAndReadAtIsNull(user.getId()));
     }
 
     @PatchMapping("/{id}/read")

@@ -26,8 +26,9 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/actuator/health", "/v3/api-docs/**", "/swagger-ui/**", "/api/v1/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/cities", "/api/v1/air-quality/**", "/api/v1/forecasts/**", "/api/v1/alert-events").authenticated()
+                        .requestMatchers("/api/v1/me/subscriptions/**", "/api/v1/me/notifications/**").authenticated()
                         .requestMatchers("/api/v1/cities/**", "/api/v1/collections/**", "/api/v1/alert-rules/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/forecasts/*/regenerate").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/forecasts/cities/*/regenerate").authenticated()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

@@ -16,7 +16,12 @@ app:
   qweather:
     base-url: https://example.test
     geo-base-url: https://example.test
-    jwt-token: test-qweather-jwt-token
+    key-id: test-key-id
+    issuer: Q123456789
+    subject: TESTPROJECT
+    private-key: MC4CAQAwBQYDK2VwBCIEIJM86MntfqnB5w+lzW4lJwC1i7F0x/JWzkx6HehUYvJc
+    token-validity: PT24H
+    refresh-threshold: PT1H
     connect-timeout: PT5S
     read-timeout: PT10S
   collection:

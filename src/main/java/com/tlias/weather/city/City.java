@@ -51,6 +51,10 @@ public class City {
     public java.math.BigDecimal getLatitude() { return latitude; }
     public java.math.BigDecimal getLongitude() { return longitude; }
 
+    public void enable() {
+        this.enabled = true;
+    }
+
     public void update(String name, String locationId, String timezone, boolean enabled) {
         this.name = name;
         this.locationId = locationId;

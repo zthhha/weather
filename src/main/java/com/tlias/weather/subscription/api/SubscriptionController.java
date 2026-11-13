@@ -3,6 +3,7 @@ package com.tlias.weather.subscription.api;
 import com.tlias.weather.city.City;
 import com.tlias.weather.city.CityRepository;
 import com.tlias.weather.common.ApiResponse;
+import com.tlias.weather.notification.NotificationService;
 import com.tlias.weather.security.User;
 import com.tlias.weather.security.UserRepository;
 import com.tlias.weather.subscription.UserSubscription;
@@ -21,11 +22,14 @@ public class SubscriptionController {
     private final UserRepository users;
     private final CityRepository cities;
     private final UserSubscriptionRepository subscriptions;
+    private final NotificationService notificationService;
 
-    public SubscriptionController(UserRepository users, CityRepository cities, UserSubscriptionRepository subscriptions) {
+    public SubscriptionController(UserRepository users, CityRepository cities, UserSubscriptionRepository subscriptions,
+                                  NotificationService notificationService) {
         this.users = users;
         this.cities = cities;
         this.subscriptions = subscriptions;
+        this.notificationService = notificationService;
     }
 
     @GetMapping
@@ -39,10 +43,16 @@ public class SubscriptionController {
                                                   Authentication authentication) {
         User user = currentUser(authentication);
         City city = cities.findById(cityId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "City not found"));
+        if (request.enabled() && !city.isEnabled()) {
+            city.enable();
+            cities.save(city);
+        }
         UserSubscription subscription = subscriptions.findByUserIdAndCityId(user.getId(), cityId)
                 .orElseGet(() -> new UserSubscription(user, city, request.minimumSeverity(), request.enabled()));
         subscription.update(request.minimumSeverity(), request.enabled());
-        return ApiResponse.of(SubscriptionResponse.from(subscriptions.save(subscription)));
+        UserSubscription saved = subscriptions.save(subscription);
+        if (saved.isEnabled()) notificationService.notifyUserOfActiveEvents(user, city);
+        return ApiResponse.of(SubscriptionResponse.from(saved));
     }
 
     @DeleteMapping("/{cityId}")

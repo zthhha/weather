@@ -35,8 +35,19 @@ class LinearTrendForecastEngineTests {
     }
 
     @Test
-    void returnsNoForecastWhenSamplesAreInsufficient() {
-        assertThat(engine.forecast(List.of(observation(80, 0), observation(80, 1)), generatedAt)).isEmpty();
+    void producesTwentyFourFlatPredictionsForOneHistoricalObservation() {
+        List<ForecastEngine.ForecastPoint> forecasts = engine.forecast(List.of(observation(80, 0)), generatedAt);
+
+        assertThat(forecasts).hasSize(24);
+        assertThat(forecasts).allMatch(point -> point.aqi() == 80);
+    }
+
+    @Test
+    void producesTwentyFourZeroPredictionsWithoutHistoricalObservations() {
+        List<ForecastEngine.ForecastPoint> forecasts = engine.forecast(List.of(), generatedAt);
+
+        assertThat(forecasts).hasSize(24);
+        assertThat(forecasts).allMatch(point -> point.aqi() == 0);
     }
 
     @Test

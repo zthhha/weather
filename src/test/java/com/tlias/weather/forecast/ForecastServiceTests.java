@@ -44,13 +44,14 @@ class ForecastServiceTests {
     }
 
     @Test
-    void reportsInsufficientDataWithoutCreatingForecasts() {
+    void createsTwentyFourZeroForecastsWithoutHistoricalObservations() {
         City city = cities.save(new City("Shanghai", "101020100", "Asia/Shanghai", true));
 
         ForecastService.ForecastGenerationResult result = service.regenerate(city.getId());
 
-        assertThat(result.qualityStatus()).isEqualTo(ForecastService.INSUFFICIENT_DATA);
-        assertThat(result.pointsGenerated()).isZero();
-        assertThat(forecasts.findAll()).isEmpty();
+        assertThat(result.qualityStatus()).isEqualTo(ForecastService.READY);
+        assertThat(result.pointsGenerated()).isEqualTo(24);
+        assertThat(forecasts.findAll()).hasSize(24);
+        assertThat(forecasts.findAll()).allMatch(forecast -> forecast.getAqi() == 0);
     }
 }

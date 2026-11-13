@@ -36,9 +36,16 @@ public class ForecastController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "City not found");
         }
         Instant now = Instant.now().truncatedTo(ChronoUnit.HOURS);
-        List<AqiForecastResponse> result = forecasts
-                .findByCityIdAndForecastAtBetweenOrderByForecastAtAsc(cityId, now, now.plus(24, ChronoUnit.HOURS))
-                .stream().map(AqiForecastResponse::from).toList();
+        List<AqiForecastResponse> result = upcomingForecasts(cityId, now);
+        if (result.size() < 24) {
+            forecastService.regenerate(cityId);
+            result = upcomingForecasts(cityId, now);
+        }
         return ApiResponse.of(result);
+    }
+
+    private List<AqiForecastResponse> upcomingForecasts(Long cityId, Instant now) {
+        return forecasts.findByCityIdAndForecastAtBetweenOrderByForecastAtAsc(cityId, now, now.plus(24, ChronoUnit.HOURS))
+                .stream().map(AqiForecastResponse::from).toList();
     }
 }

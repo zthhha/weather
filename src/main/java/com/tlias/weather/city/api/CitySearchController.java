@@ -5,6 +5,7 @@ import com.tlias.weather.city.CityLocationResolver;
 import com.tlias.weather.city.CityRepository;
 import com.tlias.weather.city.ResolvedCity;
 import com.tlias.weather.common.ApiResponse;
+import com.tlias.weather.notification.NotificationService;
 import com.tlias.weather.security.User;
 import com.tlias.weather.security.UserRepository;
 import com.tlias.weather.subscription.UserSubscription;
@@ -27,12 +28,15 @@ public class CitySearchController {
     private final CityLocationResolver resolver;
     private final UserRepository users;
     private final UserSubscriptionRepository subscriptions;
+    private final NotificationService notificationService;
 
-    public CitySearchController(CityRepository cities, CityLocationResolver resolver, UserRepository users, UserSubscriptionRepository subscriptions) {
+    public CitySearchController(CityRepository cities, CityLocationResolver resolver, UserRepository users,
+                                UserSubscriptionRepository subscriptions, NotificationService notificationService) {
         this.cities = cities;
         this.resolver = resolver;
         this.users = users;
         this.subscriptions = subscriptions;
+        this.notificationService = notificationService;
     }
 
     @GetMapping
@@ -52,10 +56,15 @@ public class CitySearchController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "City not found"));
         User user = users.findByUsername(authentication.getName())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+        if (!city.isEnabled()) {
+            city.enable();
+            cities.save(city);
+        }
         UserSubscription subscription = subscriptions.findByUserIdAndCityId(user.getId(), city.getId())
                 .orElseGet(() -> new UserSubscription(user, city, "MEDIUM", true));
         subscription.update("MEDIUM", true);
         subscriptions.save(subscription);
+        notificationService.notifyUserOfActiveEvents(user, city);
         return ApiResponse.of(CityResponse.from(city));
     }
 }

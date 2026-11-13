@@ -3,9 +3,11 @@ import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
+import { useCityStore } from '@/stores/city'
 
 const props = defineProps<{ register?: boolean }>()
 const auth = useAuthStore()
+const cityStore = useCityStore()
 const router = useRouter()
 const form = reactive({ username: '', password: '' })
 const error = ref('')
@@ -15,6 +17,7 @@ async function submit() {
   try {
     if (props.register) await auth.register(form)
     else await auth.login(form)
+    await cityStore.load()
     ElMessage.success(props.register ? '注册成功，已自动登录' : '登录成功')
     await router.replace('/')
   } catch (cause) { error.value = cause instanceof Error ? cause.message : '操作失败' }
